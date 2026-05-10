@@ -1,0 +1,21 @@
+# Environment variables – never commit secrets
+.env
+app/.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Temporary uploads
+temp.pdf
+*.tmp
+
+# VS Code
+.vscode/
+chroma*
