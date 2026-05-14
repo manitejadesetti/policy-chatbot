@@ -1,0 +1,27 @@
+services:
+  backend:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: policy-chatbot-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./app/.env
+    volumes:
+      - chroma_data:/app/chroma_db
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./app-frontend
+      dockerfile: Dockerfile
+    container_name: policy-chatbot-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  chroma_data:
