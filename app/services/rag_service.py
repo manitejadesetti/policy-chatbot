@@ -101,9 +101,7 @@ class RAGService:
         )
 
     def generate_response(self, query, model_name=None, provider_class=None) -> dict:
-        """Retrieve relevant chunks and generate a grounded answer via the configured LLM.
-        Returns a dict with 'reply' and 'requests_remaining' keys.
-        """
+        """Retrieve relevant chunks and generate a grounded answer via the configured LLM."""
         relevant_chunks = self.search(query)
 
         if not relevant_chunks:
@@ -112,7 +110,6 @@ class RAGService:
                     "I don't have any documents to reference yet. "
                     "Please upload a policy document first."
                 ),
-                "requests_remaining": None,
             }
 
         prompt = self.build_prompt(query, relevant_chunks)
@@ -125,9 +122,6 @@ class RAGService:
             reply = provider_instance.generate_response(prompt)
             return {
                 "reply": reply,
-                "requests_remaining": provider_instance.requests_remaining,
-                "requests_limit": provider_instance.requests_limit,
-                "remaining_rpm": provider_instance.requests_remaining_rpm,
             }
         except EnvironmentError as e:
             raise GenerationError(f"LLM authentication error: {e}") from e

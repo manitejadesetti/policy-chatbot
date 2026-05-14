@@ -2,11 +2,13 @@ from fastapi import APIRouter, HTTPException, Query
 
 from app.services.llm.grok_provider import GroqProvider
 from app.services.llm.gemini_provider import GeminiProvider
+from app.services.llm.local_provider import LocalLLMProvider
 from app.services.rag_service import RAGService, ModelNotFoundError, QuotaExceededError, GenerationError
 
 _PROVIDERS = {
     "groq": GroqProvider,
     "gemini": GeminiProvider,
+    "local": LocalLLMProvider,
 }
 
 router = APIRouter()
@@ -38,27 +40,6 @@ async def list_models(provider: str = Query(default="groq", description="LLM pro
     try:
         models = _PROVIDERS[provider_key]().list_models()
         return {"models": models}
-    except EnvironmentError as e:
-        raise HTTPException(status_code=401, detail=str(e))
-    except RuntimeError as e:
-        raise HTTPException(status_code=502, detail=str(e))
-
-
-@router.get("/limits", tags=["chat"])
-async def get_limits(
-    provider: str = Query(default="groq", description="LLM provider name"),
-    model: str = Query(..., description="Model ID"),
-):
-    """Probe the provider API and return current remaining rate-limit info."""
-    provider_key = provider.lower()
-    if provider_key not in _PROVIDERS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unknown provider '{provider}'. Supported: {', '.join(_PROVIDERS)}.",
-        )
-    try:
-        limits = _PROVIDERS[provider_key](model_name=model).probe_limits()
-        return limits
     except EnvironmentError as e:
         raise HTTPException(status_code=401, detail=str(e))
     except RuntimeError as e:
@@ -98,7 +79,4 @@ async def chat_endpoint(request: dict):
 
     return {
         "reply": result["reply"],
-        "requests_remaining": result["requests_remaining"],
-        "requests_limit": result["requests_limit"],
-        "remaining_rpm": result["remaining_rpm"],
     }

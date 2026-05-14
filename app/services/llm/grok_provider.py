@@ -1,12 +1,7 @@
 from app.services.llm.base import LLMProvider
 
 from groq import Groq, APIConnectionError, APIStatusError, RateLimitError, AuthenticationError
-from dotenv import load_dotenv
 import os
-
-
-# Ensure .env is loaded from the correct location
-load_dotenv("app/.env")
 
 
 class GroqProvider(LLMProvider):
@@ -71,10 +66,6 @@ class GroqProvider(LLMProvider):
                 messages=[{"role": "user", "content": prompt}],
             )
             completion = raw.parse()
-            remaining = raw.headers.get("x-ratelimit-remaining-requests")
-            limit = raw.headers.get("x-ratelimit-limit-requests")
-            self.requests_remaining = int(remaining) if remaining is not None else None
-            self.requests_limit = int(limit) if limit is not None else None
             return completion.choices[0].message.content
         except AuthenticationError:
             raise EnvironmentError("Invalid Groq API key.")
@@ -85,24 +76,3 @@ class GroqProvider(LLMProvider):
         except APIStatusError as e:
             raise RuntimeError(f"Groq API error {e.status_code}: {e.message}") from e
 
-    def probe_limits(self) -> dict:
-        """Make a minimal chat completion call to read current rate-limit headers."""
-        if not self.model_name:
-            raise RuntimeError("model_name required for probe_limits.")
-        try:
-            raw = self.client.with_raw_response.chat.completions.create(
-                model=self.model_name,
-                messages=[{"role": "user", "content": "."}],
-                max_tokens=1,
-            )
-            return {
-                "remaining": int(v) if (v := raw.headers.get("x-ratelimit-remaining-requests")) else None,
-                "limit": int(v) if (v := raw.headers.get("x-ratelimit-limit-requests")) else None,
-                "reset": raw.headers.get("x-ratelimit-reset-requests"),
-            }
-        except RateLimitError:
-            raise RuntimeError("Groq API rate limit exceeded. Try again later.")
-        except AuthenticationError:
-            raise EnvironmentError("Invalid Groq API key.")
-        except (APIConnectionError, APIStatusError) as e:
-            raise RuntimeError(str(e)) from e

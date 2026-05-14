@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 
-const PROVIDERS = ['groq', 'gemini']
+const PROVIDERS = ['groq', 'gemini', 'local']
 
 export default function ChatBox() {
   const [messages, setMessages] = useState([
@@ -12,10 +12,6 @@ export default function ChatBox() {
   const [models, setModels] = useState([])
   const [selectedModel, setSelectedModel] = useState('')
   const [modelsLoading, setModelsLoading] = useState(false)
-  const [requestsRemaining, setRequestsRemaining] = useState(null)
-  const [requestsLimit, setRequestsLimit] = useState(null)
-  const [requestsRemainingRpm, setRequestsRemainingRpm] = useState(null)
-  const [modelRateLimits, setModelRateLimits] = useState(null)
   const bottomRef = useRef(null)
 
   useEffect(() => {
@@ -26,38 +22,17 @@ export default function ChatBox() {
     setModels([])
     setSelectedModel('')
     setModelsLoading(true)
-    setRequestsRemaining(null)
-    setRequestsLimit(null)
-    setRequestsRemainingRpm(null)
-    setModelRateLimits(null)
     fetch(`/api/chat/models?provider=${selectedProvider}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.models && data.models.length > 0) {
           setModels(data.models)
           setSelectedModel(data.models[0].id)
-          setModelRateLimits(data.models[0].rate_limits ?? null)
         }
       })
       .catch(() => {})
       .finally(() => setModelsLoading(false))
   }, [selectedProvider])
-
-  // Probe real-time limits whenever provider or model changes
-  useEffect(() => {
-    if (!selectedModel) return
-    setRequestsRemaining(null)
-    setRequestsLimit(null)
-    setRequestsRemainingRpm(null)
-    fetch(`/api/chat/limits?provider=${selectedProvider}&model=${encodeURIComponent(selectedModel)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.remaining != null) setRequestsRemaining(data.remaining)
-        if (data.limit != null) setRequestsLimit(data.limit)
-        if (data.remaining_rpm != null) setRequestsRemainingRpm(data.remaining_rpm)
-      })
-      .catch(() => {})
-  }, [selectedProvider, selectedModel])
 
   async function sendMessage(e) {
     e.preventDefault()
@@ -83,9 +58,6 @@ export default function ChatBox() {
         throw new Error(data.detail || 'Unknown error')
       }
       setMessages((prev) => [...prev, { role: 'assistant', text: data.reply }])
-      if (data.requests_remaining != null) setRequestsRemaining(data.requests_remaining)
-      if (data.requests_limit != null) setRequestsLimit(data.requests_limit)
-      if (data.remaining_rpm != null) setRequestsRemainingRpm(data.remaining_rpm)
     } catch (err) {
       setMessages((prev) => [
         ...prev,
@@ -101,17 +73,6 @@ export default function ChatBox() {
       <div className="chat-header">
         <h2>Chat</h2>
         <div className="chat-header-right">
-          {(requestsRemaining != null || requestsLimit != null) && (
-            <span className="requests-remaining" title="Requests remaining this day / this minute">
-              {requestsRemaining ?? '…'}{requestsLimit != null ? ` / ${requestsLimit}` : ''} today
-              {requestsRemainingRpm != null && ` · ${requestsRemainingRpm} this min`}
-            </span>
-          )}
-          {requestsRemaining == null && requestsLimit == null && modelRateLimits && (
-            <span className="requests-remaining" title="Free-tier rate limits for this model">
-              Limit: {modelRateLimits.rpm} RPM / {modelRateLimits.rpd} RPD
-            </span>
-          )}
           <div className="chat-selectors">
           <div className="model-selector">
             <label htmlFor="provider-select">Provider:</label>
@@ -135,9 +96,6 @@ export default function ChatBox() {
               value={selectedModel}
               onChange={(e) => {
                 setSelectedModel(e.target.value)
-                const m = models.find((m) => m.id === e.target.value)
-                setModelRateLimits(m?.rate_limits ?? null)
-                setRequestsRemaining(null)
               }}
               disabled={loading || modelsLoading || models.length === 0}
             >

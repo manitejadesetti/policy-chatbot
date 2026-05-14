@@ -1,5 +1,5 @@
-from dotenv import load_dotenv
-load_dotenv(dotenv_path="app/.env")
+# Centralized env loading – handles load_dotenv once
+import app.config  # noqa: F401
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

@@ -191,16 +191,6 @@
   flex-wrap: wrap;
 }
 
-.requests-remaining {
-  font-size: 12px;
-  padding: 3px 10px;
-  border-radius: 12px;
-  background: var(--accent-bg);
-  border: 1px solid var(--border);
-  color: var(--text-1);
-  white-space: nowrap;
-}
-
 .chat-selectors {
   display: flex;
   align-items: center;
