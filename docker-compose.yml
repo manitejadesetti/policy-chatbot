@@ -9,7 +9,7 @@ services:
     env_file:
       - ./app/.env
     volumes:
-      - chroma_data:/app/chroma_db
+      - chroma_data:/service/app/chroma_db
     restart: unless-stopped
 
   frontend:

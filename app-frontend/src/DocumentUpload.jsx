@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 const ACCEPTED = '.txt,.md,.csv,.pdf'
 
 function FileIcon() {
@@ -32,7 +33,7 @@ export default function DocumentUpload() {
     form.append('file', file)
 
     try {
-      const res = await fetch('/api/documents/upload', { method: 'POST', body: form })
+      const res = await fetch(`${API_BASE}/api/documents/upload`, { method: 'POST', body: form })
       const data = await res.json()
       if (!res.ok) {
         updateEntry(id, { status: 'error', detail: data.detail ?? 'Upload failed.' })

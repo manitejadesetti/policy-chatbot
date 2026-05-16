@@ -1,5 +1,4 @@
 # Centralized env loading – handles load_dotenv once
-import app.config  # noqa: F401
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,5 +32,5 @@ app.include_router(
     documents.router,
     prefix="/api/documents",
     tags=["v1"]
-)   
+)
     

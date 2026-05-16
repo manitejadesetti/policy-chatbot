@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
 const PROVIDERS = ['groq', 'gemini', 'local']
 
 export default function ChatBox() {
@@ -22,7 +23,7 @@ export default function ChatBox() {
     setModels([])
     setSelectedModel('')
     setModelsLoading(true)
-    fetch(`/api/chat/models?provider=${selectedProvider}`)
+    fetch(`${API_BASE}/api/chat/models?provider=${selectedProvider}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.models && data.models.length > 0) {
@@ -44,7 +45,7 @@ export default function ChatBox() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/chat/send', {
+      const res = await fetch(`${API_BASE}/api/chat/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
