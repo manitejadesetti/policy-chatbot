@@ -2,9 +2,12 @@ import os
 import uuid
 
 import chromadb
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams
 from pypdf import PdfReader, errors as pypdf_errors
 from sentence_transformers import SentenceTransformer
 
+from app.db_connectors.qdrant_repository import QdrantRepository
 from app.services.llm.grok_provider import GroqProvider
 
 
@@ -36,8 +39,8 @@ class RAGService:
 
     def __init__(self, provider=GroqProvider):
         self.model = SentenceTransformer('all-MiniLM-L6-v2')
-        self.client = chromadb.PersistentClient(path="./chroma_db1")
-        self.collection = self.client.get_or_create_collection(name="documents")
+        self.client = QdrantRepository()
+        self.collection = self.client.get_or_create_collection("documents")
         self.provider = provider
 
     def parse_file(self, file_path):
@@ -67,7 +70,8 @@ class RAGService:
         for chunk in chunks:
             chunk_id = str(uuid.uuid4())
             embedding = self.model.encode(chunk).tolist()
-            self.collection.add(
+            self.client.add(
+                collection_name="documents",
                 ids=[chunk_id],
                 documents=[chunk],
                 embeddings=[embedding],
@@ -79,7 +83,8 @@ class RAGService:
             return []
         query_embedding = self.model.encode(query).tolist()
         n = min(top_k, self.collection.count())
-        results = self.collection.query(
+        results = self.client.query(
+            collection_name="documents",    
             query_embeddings=[query_embedding],
             n_results=n,
         )
