@@ -1,8 +1,8 @@
 
 
 
-from app.services.llm.gemini_provider import GeminiProvider
-from app.services.llm.openai_provider import OpenAIProvider
+from app_backend.services.llm.gemini_provider import GeminiProvider
+from app_backend.services.llm.openai_provider import OpenAIProvider
 
 
 def get_llm_provider(provider_name: str, model_name: str):

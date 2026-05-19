@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Query
 
-from app.services.llm.grok_provider import GroqProvider
-from app.services.llm.gemini_provider import GeminiProvider
-from app.services.llm.local_provider import LocalLLMProvider
-from app.services.rag_service import RAGService, ModelNotFoundError, QuotaExceededError, GenerationError
+from app_backend.services.llm.grok_provider import GroqProvider
+from app_backend.services.llm.gemini_provider import GeminiProvider
+from app_backend.services.llm.local_provider import LocalLLMProvider
+from app_backend.services.rag_service import RAGService, ModelNotFoundError, QuotaExceededError, GenerationError
 
 _PROVIDERS = {
     "groq": GroqProvider,
@@ -12,15 +12,6 @@ _PROVIDERS = {
 }
 
 router = APIRouter()
-
-try:
-    _rag = RAGService()
-except EnvironmentError as e:
-    _rag = None
-    _rag_init_error = str(e)
-else:
-    _rag_init_error = None
-
 
 @router.get("/providers", tags=["chat"])
 async def list_providers():
@@ -48,6 +39,7 @@ async def list_models(provider: str = Query(default="groq", description="LLM pro
 
 @router.post("/send", tags=["chat"])
 async def chat_endpoint(request: dict):
+    _rag = RAGService()  # Re-instantiate to ensure fresh connection (optional, can be optimized)
     if _rag is None:
         raise HTTPException(status_code=503, detail=_rag_init_error)
 

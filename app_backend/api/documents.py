@@ -2,8 +2,8 @@ import os
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
-from app.services.rag_service import RAGService
-from app.services.pdf_processor import PDFProcessor
+from app_backend.services.rag_service import RAGService
+from app_backend.services.pdf_processor import PDFProcessor
 
 
 router = APIRouter()

@@ -2,9 +2,9 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import health
-from app.api import chatbot
-from app.api import documents
+from app_backend.api import health
+from app_backend.api import chatbot
+from app_backend.api import documents
 
 
 app = FastAPI()

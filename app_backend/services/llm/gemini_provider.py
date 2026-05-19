@@ -1,4 +1,4 @@
-from app.services.llm.base import LLMProvider
+from app_backend.services.llm.base import LLMProvider
 import google.generativeai as generativeai
 from google.api_core import exceptions as google_exceptions
 import requests as http

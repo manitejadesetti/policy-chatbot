@@ -7,8 +7,8 @@ from qdrant_client.models import Distance, VectorParams
 from pypdf import PdfReader, errors as pypdf_errors
 from sentence_transformers import SentenceTransformer
 
-from app.db_connectors.qdrant_repository import QdrantRepository
-from app.services.llm.grok_provider import GroqProvider
+from app_backend.db_connectors.qdrant_repository import QdrantRepository
+from app_backend.services.llm.grok_provider import GroqProvider
 
 
 class ModelNotFoundError(Exception):  # 404 — model name doesn't exist

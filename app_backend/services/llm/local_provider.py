@@ -1,4 +1,4 @@
-from app.services.llm.base import LLMProvider
+from app_backend.services.llm.base import LLMProvider
 
 from openai import OpenAI, APIConnectionError, APIStatusError, RateLimitError
 import os

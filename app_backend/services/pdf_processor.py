@@ -1,5 +1,5 @@
-from app.services.file_parser import UnstructuredDataParser
-from app.services.rag_service import RAGService
+from app_backend.services.file_parser import UnstructuredDataParser
+from app_backend.services.rag_service import RAGService
 
 
 class PDFProcessor:
