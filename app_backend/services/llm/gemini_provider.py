@@ -1,6 +1,4 @@
 from app_backend.services.llm.base import LLMProvider
-import google.generativeai as generativeai
-from google.api_core import exceptions as google_exceptions
 import requests as http
 import os
 
@@ -34,29 +32,34 @@ class GeminiProvider(LLMProvider):
         self._api_key = os.getenv("GEMINI_API_KEY")
         if not self._api_key:
             raise EnvironmentError("GEMINI_API_KEY environment variable is not set.")
-        generativeai.configure(api_key=self._api_key)
 
     def list_models(self) -> list[dict]:
+        url = f"{_GEMINI_REST_BASE}/models"
         try:
+            resp = http.get(url, params={"key": self._api_key}, timeout=60)
+        except http.exceptions.ConnectionError as e:
+            raise RuntimeError(f"Could not connect to Gemini API: {e}") from e
+        except http.exceptions.Timeout:
+            raise RuntimeError("Gemini API request timed out.")
+
+        _check_gemini_status(resp, "models")
+        data = resp.json()
+
+        try:
+            models = data.get("models", [])
             return [
                 {
-                    "id": m.name,
-                    "display_name": m.display_name,
+                    "id": m["name"],
+                    "display_name": m.get("displayName", m["name"]),
                     "owned_by": "Google",
-                    "context_window": getattr(m, "input_token_limit", None),
-                    "max_completion_tokens": getattr(m, "output_token_limit", None),
+                    "context_window": _parse_int(m.get("inputTokenLimit")),
+                    "max_completion_tokens": _parse_int(m.get("outputTokenLimit")),
                 }
-                for m in generativeai.list_models()
-                if "generateContent" in m.supported_generation_methods
+                for m in models
+                if "generateContent" in m.get("supportedGenerationMethods", [])
             ]
-        except google_exceptions.PermissionDenied:
-            raise EnvironmentError("Invalid Gemini API key.")
-        except google_exceptions.ResourceExhausted:
-            raise RuntimeError("Gemini API quota exceeded. Try again later.")
-        except google_exceptions.ServiceUnavailable:
-            raise RuntimeError("Gemini service is currently unavailable.")
-        except google_exceptions.GoogleAPIError as e:
-            raise RuntimeError(f"Gemini API error: {e}") from e
+        except (KeyError, TypeError) as e:
+            raise RuntimeError(f"Unexpected Gemini models response format: {data}") from e
 
     def generate_response(self, prompt: str) -> str:
         if not self.model_name:

@@ -57,24 +57,27 @@ class QdrantRepository:
         self.client.upsert(collection_name=collection_name, points=points)
 
     def query(
-        self,
-        collection_name: str,
-        query_embeddings: list[list[float]],
-        n_results: int,
-    ) -> dict[str, Any]:
+    self,
+    collection_name: str,
+    query_embeddings: list[list[float]],
+    n_results: int,
+) -> dict[str, Any]:
         if not query_embeddings:
             return {"documents": [[]]}
 
-        hits = self.client.search(
+        response = self.client.query_points(
             collection_name=collection_name,
-            query_vector=query_embeddings[0],
+            query=query_embeddings[0],
             limit=n_results,
             with_payload=True,
         )
+
+        points = response.points  # this is the important part
+
         documents = [
-            (hit.payload or {}).get("document", "")
-            for hit in hits
-            if (hit.payload or {}).get("document")
+            (point.payload or {}).get("document", "")
+            for point in points
+            if (point.payload or {}).get("document")
         ]
         return {"documents": [documents]}
 
